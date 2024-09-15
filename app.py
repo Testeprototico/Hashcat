@@ -53,16 +53,10 @@ def start_hashcat():
 
 @app.route('/log', methods=['GET'])
 def view_log():
-    # Verifique se o arquivo de log existe
     if os.path.exists(LOG_FILE):
-        # Obter a data e hora da última modificação do log
         last_modified_time = datetime.fromtimestamp(os.path.getmtime(LOG_FILE)).strftime('%Y-%m-%d %H:%M:%S')
-        
-        # Leia o conteúdo do arquivo de log
         with open(LOG_FILE, 'r') as file:
             log_content = file.read()
-        
-        # Crie uma página HTML simples para exibir o conteúdo do log e a última atualização
         html_content = f'''
         <html>
         <head>
@@ -83,6 +77,31 @@ def view_log():
         </html>
         '''
         return render_template_string(html_content)
+    elif os.path.exists('/hashcat/logs/hashcat_output.log'):
+        # Se hashcat.log não estiver disponível, use hashcat_output.log
+        with open('/hashcat/logs/hashcat_output.log', 'r') as file:
+            log_content = file.read()
+        last_modified_time = datetime.fromtimestamp(os.path.getmtime('/hashcat/logs/hashcat_output.log')).strftime('%Y-%m-%d %H:%M:%S')
+        html_content = f'''
+        <html>
+        <head>
+            <title>Hashcat Output Log</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; }}
+                pre {{ background: #f0f0f0; padding: 10px; }}
+                .button {{ padding: 10px 20px; margin: 10px; text-decoration: none; color: white; background-color: #007BFF; border-radius: 5px; }}
+                .button:hover {{ background-color: #0056b3; }}
+            </style>
+        </head>
+        <body>
+            <h1>Hashcat Output Log</h1>
+            <p><strong>Last Updated:</strong> {last_modified_time}</p>
+            <pre>{log_content}</pre>
+            <a href="/" class="button">Back to Home</a>
+        </body>
+        </html>
+        '''
+        return render_template_string(html_content)
     else:
         return jsonify(message='Log file not found'), 404
 
@@ -91,7 +110,14 @@ def debug():
     log_dir = '/hashcat/logs'
     if os.path.exists(log_dir):
         files = os.listdir(log_dir)
-        return jsonify(files=files), 200
+        files_detail = {}
+        for file in files:
+            path = os.path.join(log_dir, file)
+            files_detail[file] = {
+                'size': os.path.getsize(path),
+                'last_modified': datetime.fromtimestamp(os.path.getmtime(path)).strftime('%Y-%m-%d %H:%M:%S')
+            }
+        return jsonify(files=files_detail), 200
     else:
         return jsonify(message='Log directory not found'), 404
 
