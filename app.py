@@ -6,7 +6,7 @@ from datetime import datetime
 app = Flask(__name__)
 
 LOG_FILE = '/hashcat/logs/hashcat.log'
-HASHCAT_CMD = 'hashcat -m 0 -a 0 example.hash example.dict -o /hashcat/logs/hashcat.log'
+HASHCAT_CMD = 'hashcat -m 1000 -O -a3 -i hash.txt -o /hashcat/logs/hashcat.log'
 
 @app.route('/')
 def home():
