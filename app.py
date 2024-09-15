@@ -29,7 +29,7 @@ def home():
     </html>
     '''
 
-@app.route('/start-hashcat', methods=['POST'])
+@app.route('/start-hashcat', methods=['GET', 'POST'])
 def start_hashcat():
     # Inicie o Hashcat em um processo separado
     subprocess.Popen(HASHCAT_CMD, shell=True)
