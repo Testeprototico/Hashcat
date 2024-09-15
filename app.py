@@ -6,11 +6,28 @@ from datetime import datetime
 app = Flask(__name__)
 
 LOG_FILE = '/hashcat/logs/hashcat.log'
-HASHCAT_CMD = 'hashcat -m 1000 -O -a3 -i hash.txt'
+HASHCAT_CMD = 'hashcat -m 1000 -O -a3 -i hash.txt --outfile /hashcat/logs/hashcat.log'
 
 @app.route('/')
 def home():
-    return "Welcome to the Hashcat Service! Use /start-hashcat to start Hashcat and /log to view the log."
+    return '''
+    <html>
+    <head>
+        <title>Hashcat Service</title>
+        <style>
+            body { font-family: Arial, sans-serif; }
+            .button { padding: 10px 20px; margin: 10px; text-decoration: none; color: white; background-color: #007BFF; border-radius: 5px; }
+            .button:hover { background-color: #0056b3; }
+        </style>
+    </head>
+    <body>
+        <h1>Welcome to the Hashcat Service</h1>
+        <p>Use the following buttons to interact with the service:</p>
+        <a href="/start-hashcat" class="button">Start Hashcat</a>
+        <a href="/log" class="button">View Log</a>
+    </body>
+    </html>
+    '''
 
 @app.route('/start-hashcat', methods=['POST'])
 def start_hashcat():
@@ -37,12 +54,15 @@ def view_log():
             <style>
                 body {{ font-family: Arial, sans-serif; }}
                 pre {{ background: #f0f0f0; padding: 10px; }}
+                .button {{ padding: 10px 20px; margin: 10px; text-decoration: none; color: white; background-color: #007BFF; border-radius: 5px; }}
+                .button:hover {{ background-color: #0056b3; }}
             </style>
         </head>
         <body>
             <h1>Hashcat Log</h1>
             <p><strong>Last Updated:</strong> {last_modified_time}</p>
             <pre>{log_content}</pre>
+            <a href="/" class="button">Back to Home</a>
         </body>
         </html>
         '''
