@@ -18,18 +18,22 @@ def home():
             body { font-family: Arial, sans-serif; }
             .button { padding: 10px 20px; margin: 10px; text-decoration: none; color: white; background-color: #007BFF; border-radius: 5px; }
             .button:hover { background-color: #0056b3; }
+            form { margin: 10px; }
         </style>
     </head>
     <body>
         <h1>Welcome to the Hashcat Service</h1>
         <p>Use the following buttons to interact with the service:</p>
-        <a href="/start-hashcat" class="button">Start Hashcat</a>
+        <form action="/start-hashcat" method="post">
+            <button type="submit" class="button">Start Hashcat</button>
+        </form>
         <a href="/log" class="button">View Log</a>
+        <a href="/debug" class="button">Debug</a>
     </body>
     </html>
     '''
 
-@app.route('/start-hashcat', methods=['GET', 'POST'])
+@app.route('/start-hashcat', methods=['POST'])
 def start_hashcat():
     # Inicie o Hashcat em um processo separado
     subprocess.Popen(HASHCAT_CMD, shell=True)
@@ -69,6 +73,15 @@ def view_log():
         return render_template_string(html_content)
     else:
         return jsonify(message='Log file not found'), 404
+
+@app.route('/debug', methods=['GET'])
+def debug():
+    log_dir = '/hashcat/logs'
+    if os.path.exists(log_dir):
+        files = os.listdir(log_dir)
+        return jsonify(files=files), 200
+    else:
+        return jsonify(message='Log directory not found'), 404
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
