@@ -1,11 +1,16 @@
-from flask import Flask, send_file, jsonify
+from flask import Flask, send_file, jsonify, render_template_string
 import subprocess
 import os
+from datetime import datetime
 
 app = Flask(__name__)
 
 LOG_FILE = '/hashcat/logs/hashcat.log'
-HASHCAT_CMD = 'hashcat -m 1000 -O -a3 -i hash.txt -o /hashcat/logs/hashcat.log'
+HASHCAT_CMD = 'hashcat -m 0 -a 0 example.hash example.dict -o /hashcat/logs/hashcat.log'
+
+@app.route('/')
+def home():
+    return "Welcome to the Hashcat Service! Use /start-hashcat to start Hashcat and /log to view the log."
 
 @app.route('/start-hashcat', methods=['POST'])
 def start_hashcat():
@@ -13,11 +18,35 @@ def start_hashcat():
     subprocess.Popen(HASHCAT_CMD, shell=True)
     return jsonify(message='Hashcat started'), 200
 
-@app.route('/download-log', methods=['GET'])
-def download_log():
+@app.route('/log', methods=['GET'])
+def view_log():
     # Verifique se o arquivo de log existe
     if os.path.exists(LOG_FILE):
-        return send_file(LOG_FILE, as_attachment=True)
+        # Obter a data e hora da última modificação do log
+        last_modified_time = datetime.fromtimestamp(os.path.getmtime(LOG_FILE)).strftime('%Y-%m-%d %H:%M:%S')
+        
+        # Leia o conteúdo do arquivo de log
+        with open(LOG_FILE, 'r') as file:
+            log_content = file.read()
+        
+        # Crie uma página HTML simples para exibir o conteúdo do log e a última atualização
+        html_content = f'''
+        <html>
+        <head>
+            <title>Hashcat Log</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; }}
+                pre {{ background: #f0f0f0; padding: 10px; }}
+            </style>
+        </head>
+        <body>
+            <h1>Hashcat Log</h1>
+            <p><strong>Last Updated:</strong> {last_modified_time}</p>
+            <pre>{log_content}</pre>
+        </body>
+        </html>
+        '''
+        return render_template_string(html_content)
     else:
         return jsonify(message='Log file not found'), 404
 
