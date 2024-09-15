@@ -6,7 +6,7 @@ from datetime import datetime
 app = Flask(__name__)
 
 LOG_FILE = '/hashcat/logs/hashcat.log'
-HASHCAT_CMD = 'hashcat -m 1000 -O -a3 -i hash.txt'
+HASHCAT_CMD = 'hashcat -m 1000 -a 0 hash.txt --outfile /hashcat/logs/hashcat.log'
 
 @app.route('/')
 def home():
@@ -35,9 +35,21 @@ def home():
 
 @app.route('/start-hashcat', methods=['POST'])
 def start_hashcat():
-    # Inicie o Hashcat em um processo separado
-    subprocess.Popen(HASHCAT_CMD, shell=True)
-    return jsonify(message='Hashcat started'), 200
+    try:
+        # Execute Hashcat command and capture output and errors
+        process = subprocess.Popen(HASHCAT_CMD, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+        stdout = stdout.decode('utf-8')
+        stderr = stderr.decode('utf-8')
+        
+        # Log output for debugging
+        with open('/hashcat/logs/hashcat_output.log', 'w') as f:
+            f.write(stdout)
+            f.write(stderr)
+        
+        return jsonify(message='Hashcat started'), 200
+    except Exception as e:
+        return jsonify(message=str(e)), 500
 
 @app.route('/log', methods=['GET'])
 def view_log():
